@@ -36,14 +36,17 @@ let activeConfig: DodoCheckoutConfig | null = null;
 let overlay: HTMLDivElement | null = null;
 let iframe: HTMLIFrameElement | null = null;
 let messageListener: ((e: MessageEvent) => void) | null = null;
+let readyTimeout: number | null = null;
 
 function teardown(): void {
+  if (readyTimeout) clearTimeout(readyTimeout);
   if (messageListener) window.removeEventListener("message", messageListener);
   if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
   document.body.style.overflow = "";
   overlay = null;
   iframe = null;
   messageListener = null;
+  readyTimeout = null;
   activeConfig = null;
 }
 
@@ -82,6 +85,14 @@ function open(config: DodoCheckoutConfig): void {
   document.body.appendChild(overlay);
   document.body.style.overflow = "hidden";
 
+  // Set a timeout for the checkout to send "ready" message
+  readyTimeout = window.setTimeout(() => {
+    if (overlay) {
+      config.onError?.({ code: "checkout_timeout", message: "Checkout failed to load. Please try again." });
+      teardown();
+    }
+  }, 10000); // 10 second timeout
+
   messageListener = (e: MessageEvent<CheckoutMessage>) => {
     // Only trust messages that actually came from the checkout's real origin —
     // e.origin is set by the browser and can't be spoofed by message content,
@@ -91,6 +102,11 @@ function open(config: DodoCheckoutConfig): void {
     if (!data || data.source !== "dodo-checkout") return;
 
     if (data.type === "ready") {
+      // Clear the timeout since checkout loaded successfully
+      if (readyTimeout) {
+        clearTimeout(readyTimeout);
+        readyTimeout = null;
+      }
       iframe?.contentWindow?.postMessage(
         {
           source: "dodo-sdk",

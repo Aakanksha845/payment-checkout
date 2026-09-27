@@ -2,13 +2,14 @@
 (function () {
   var CHECKOUT_ORIGIN = "https://claude.ai/artifact/8Us5zj9nRWm2iHnzEwRaBd";
   var CHECKOUT_ORIGIN_BASE = new URL(CHECKOUT_ORIGIN).origin; // scheme+host+port only
-  var overlay = null, iframe = null, messageListener = null;
+  var overlay = null, iframe = null, messageListener = null, readyTimeout = null;
 
   function teardown() {
+    if (readyTimeout) clearTimeout(readyTimeout);
     if (messageListener) window.removeEventListener("message", messageListener);
     if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
     document.body.style.overflow = "";
-    overlay = null; iframe = null; messageListener = null;
+    overlay = null; iframe = null; messageListener = null; readyTimeout = null;
   }
 
   function open(config) {
@@ -38,6 +39,14 @@
     document.body.appendChild(overlay);
     document.body.style.overflow = "hidden";
 
+    // Set a timeout for the checkout to send "ready" message
+    readyTimeout = setTimeout(function () {
+      if (overlay) {
+        config.onError && config.onError({ code: "checkout_timeout", message: "Checkout failed to load. Please try again." });
+        teardown();
+      }
+    }, 10000); // 10 second timeout
+
     messageListener = function (e) {
       // Only trust messages that actually came from the checkout's real
       // origin — e.origin is set by the browser itself and can't be spoofed
@@ -47,6 +56,11 @@
       if (!data || data.source !== "dodo-checkout") return;
 
       if (data.type === "ready") {
+        // Clear the timeout since checkout loaded successfully
+        if (readyTimeout) {
+          clearTimeout(readyTimeout);
+          readyTimeout = null;
+        }
         iframe.contentWindow.postMessage({
           source: "dodo-sdk", type: "init",
           productId: config.productId, productName: config.productName, amount: config.amount, theme: config.theme,
