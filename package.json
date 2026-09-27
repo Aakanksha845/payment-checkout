@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Checkout demo with React components",
   "scripts": {
-    "dev": "vite"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.3.1",

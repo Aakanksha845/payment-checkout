@@ -6,7 +6,7 @@
  * entered and processed entirely inside the checkout iframe's own origin.
  */
 
-const CHECKOUT_ORIGIN = "https://claude.ai/artifact/8Us5zj9nRWm2iHnzEwRaBd";
+const CHECKOUT_ORIGIN = "after deployed";
 const CHECKOUT_ORIGIN_BASE = new URL(CHECKOUT_ORIGIN).origin; // scheme+host+port only
 
 type SuccessPayload = { sessionId: string };
