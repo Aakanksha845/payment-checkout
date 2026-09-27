@@ -76,3 +76,5 @@ Given the time constraints, here's what I'd prioritize next:
 5. **SDK build pipeline** — Set up proper compilation from `sdk.ts` to `sdk.compiled.js` with minification and source maps for production distribution.
 
 6. **Logo asset** — The checkout references `/logoFullNameLight.svg` which needs to be created or the reference removed.
+
+7. **Multi-origin deployment architecture** — Currently the checkout, SDK, and demo are deployed together. For production, they should be split into separate deployments (checkout on its own domain, SDK on CDN, demo separately) to fully realize the security model. The current architecture is sound — the multi-origin deployment is an operational detail, not a functional requirement.
