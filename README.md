@@ -1,4 +1,4 @@
-# DodoCheckout — take-home submission
+# Checkout 
 
 ## How to run it
 
